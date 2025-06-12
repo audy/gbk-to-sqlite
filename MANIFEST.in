@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+include pyproject.toml
+recursive-include gbk_to_sqlite *.py
+recursive-include tests *.py
+global-exclude *.py[cod] __pycache__ *.so

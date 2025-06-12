@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Python version management
+.python-version
+
+# Package management
+uv.lock
+
+# SQLite databases
+*.sqlite
+
+# Unit test / coverage reports
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Artifacts
+*.sqlite
