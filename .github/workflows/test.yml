@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -14,37 +14,37 @@ jobs:
         python-version: ["3.11"]
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-    
-    - name: Install uv package manager
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - uses: actions/checkout@v4
 
-    - name: Setup Python environment
-      run: |
-        uv venv
-        source .venv/bin/activate
-        uv pip install -e ".[dev]"
-    
-    - name: Run tests
-      run: |
-        source .venv/bin/activate
-        python -m pytest tests/ -v
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
-    - name: Build package
-      run: |
-        source .venv/bin/activate
-        python -m pip install build
-        python -m build
+      - name: Install uv package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Verify package can be installed
-      run: |
-        source .venv/bin/activate
-        python -m pip install dist/*.whl
+      - name: Setup Python environment
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          python -m pytest tests/ -v
+
+      - name: Build package
+        run: |
+          source .venv/bin/activate
+          uv pip install build
+          python -m build
+
+      - name: Verify package can be installed
+        run: |
+          source .venv/bin/activate
+          uv pip install dist/*.whl
