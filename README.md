@@ -33,7 +33,47 @@ uv pip install gbk-to-sqlite
 
 ## Database Schema and Models
 
-gbk-to-sqlite uses a relational model to represent GenBank data:
+gbk-to-sqlite uses a relational model to represent GenBank data. The following Entity Relationship Diagram (ERD) illustrates the database structure:
+
+```mermaid
+erDiagram
+    Genome ||--o{ Record : contains
+    Record ||--o{ Feature : has
+    Feature ||--o{ Qualifier : has
+
+    Genome {
+        integer id PK
+        string gbk_path
+    }
+
+    Record {
+        integer id PK
+        integer genome FK
+        string name
+        string definition
+        string accession
+        string version
+    }
+
+    Feature {
+        integer genome FK
+        integer record FK
+        integer feature_index
+        integer location_start
+        integer location_end
+        string location_strand
+    }
+
+    Qualifier {
+        integer genome FK
+        integer record FK
+        integer feature_index FK
+        string key
+        string value
+    }
+```
+
+gbk-to-sqlite uses the following models to represent GenBank data:
 
 ### Genome
 Represents a GenBank file:
