@@ -291,7 +291,7 @@ def test_convert_gbk_to_sqlite_handles_join_locations(db_with_tables, join_locat
         
         # Check that a warning was issued
         assert len(w) >= 1
-        assert "Join locations are not fully supported" in str(w[0].message)
+        assert "does not have strand attribute" in str(w[0].message)
     
     # Verify the record was still stored
     record = Record.select().where(Record.name == "TEST0004").first()
