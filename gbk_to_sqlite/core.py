@@ -44,8 +44,15 @@ def convert_gbk_to_sqlite(gbk_path: str, batch_size: int = 5000) -> None:
     record_objs = []
     feature_tuples = []
     qualifier_tuples = []
-    feature_columns = ('genome_id', 'record_id', 'feature_index', 'location_start', 'location_end', 'location_strand')
-    qualifier_columns = ('genome_id', 'record_id', 'feature_index', 'key', 'value')
+    feature_columns = (
+        "genome_id",
+        "record_id",
+        "feature_index",
+        "location_start",
+        "location_end",
+        "location_strand",
+    )
+    qualifier_columns = ("genome_id", "record_id", "feature_index", "key", "value")
 
     for record in iter_gb_records(gbk_path):
         record_obj = Record.create(
@@ -53,42 +60,52 @@ def convert_gbk_to_sqlite(gbk_path: str, batch_size: int = 5000) -> None:
             name=record.name,
             definition=record.definition,
             accession=record.accession,
-            version=record.version
+            version=record.version,
         )
         record_objs.append(record_obj)
         for idx, feature in enumerate(record.features):
             # Skip complex Join locations that don't have strand attribute
-            if not hasattr(feature.location, 'strand'):
-                warnings.warn(f"Feature {idx} of record {record_obj.name} does not have strand attribute")
-                location_start = feature.location.start if hasattr(feature.location, 'start') else None
-                location_end = feature.location.end if hasattr(feature.location, 'end') else None
+            if not hasattr(feature.location, "strand"):
+                warnings.warn(
+                    f"Feature {idx} of record {record_obj.name} does not have strand attribute"
+                )
+                location_start = (
+                    feature.location.start if hasattr(feature.location, "start") else None
+                )
+                location_end = feature.location.end if hasattr(feature.location, "end") else None
                 location_strand = None
             else:
                 location_start = feature.location.start
                 location_end = feature.location.end
-                location_strand = str(feature.location.strand) if feature.location.strand is not None else None
+                location_strand = (
+                    str(feature.location.strand) if feature.location.strand is not None else None
+                )
 
-            feature_tuples.append((
-                genome.id,
-                record_obj.id,
-                idx,
-                location_start,
-                location_end,
-                location_strand,
-            ))
+            feature_tuples.append(
+                (
+                    genome.id,
+                    record_obj.id,
+                    idx,
+                    location_start,
+                    location_end,
+                    location_strand,
+                )
+            )
 
             # Process feature batch if we've reached batch_size
             if len(feature_tuples) >= batch_size:
                 _bulk_insert_tuples(feature_tuples, "feature", feature_columns)
                 feature_tuples = []
             for q in feature.qualifiers:
-                qualifier_tuples.append((
-                    genome.id,
-                    record_obj.id,
-                    idx,
-                    q.key,
-                    q.value,
-                ))
+                qualifier_tuples.append(
+                    (
+                        genome.id,
+                        record_obj.id,
+                        idx,
+                        q.key,
+                        q.value,
+                    )
+                )
 
                 # Process qualifier batch if we've reached batch_size
                 if len(qualifier_tuples) >= batch_size:
@@ -115,8 +132,8 @@ def _bulk_insert_tuples(values: List[tuple], table_name: str, columns: tuple) ->
     if not values:
         return
 
-    placeholders = ', '.join(['?'] * len(columns))
-    sql = f'INSERT INTO {table_name} ({", ".join(columns)}) VALUES ({placeholders})'
+    placeholders = ", ".join(["?"] * len(columns))
+    sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
     conn = db.connection()
     cursor = conn.cursor()
     cursor.executemany(sql, values)
@@ -127,7 +144,9 @@ def create_indexes() -> None:
     """Create database indexes for optimal query performance."""
     with db:
         db.execute_sql("CREATE INDEX IF NOT EXISTS idx_qualifier_feature ON qualifier (feature);")
-        db.execute_sql("CREATE INDEX IF NOT EXISTS idx_qualifier_feature_key ON qualifier (feature, key);")
+        db.execute_sql(
+            "CREATE INDEX IF NOT EXISTS idx_qualifier_feature_key ON qualifier (feature, key);"
+        )
         db.execute_sql("CREATE INDEX IF NOT EXISTS idx_feature_record ON feature (record);")
         db.execute_sql("CREATE INDEX IF NOT EXISTS idx_record_genome ON record (genome);")
 

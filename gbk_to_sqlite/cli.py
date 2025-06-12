@@ -17,9 +17,11 @@ from .core import convert_gbk_to_sqlite, optimize_database, create_indexes
 
 def main() -> None:
     """Main entry point for the command-line interface."""
-    parser = argparse.ArgumentParser(description="Convert one or more GenBank files to a SQLite database.")
+    parser = argparse.ArgumentParser(
+        description="Convert one or more GenBank files to a SQLite database."
+    )
     parser.add_argument("--genbank-files", nargs="+", help="Input GenBank file(s)")
-    parser.add_argument('--genbank-glob', type=str, help='glob-string of genbank files')
+    parser.add_argument("--genbank-glob", type=str, help="glob-string of genbank files")
     parser.add_argument("--sqlite-db", help="Output SQLite database file")
     parser.add_argument("--batch-size", type=int, default=5000, help="Batch size for bulk inserts")
     args = parser.parse_args()
