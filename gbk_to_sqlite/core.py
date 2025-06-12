@@ -30,17 +30,20 @@ def iter_gb_records(gbk_path: str) -> Generator:
         yield from gb_io.iter(gbk_path)
 
 
-def convert_gbk_to_sqlite(gbk_path: str) -> None:
+def convert_gbk_to_sqlite(gbk_path: str, batch_size: int = 2500) -> None:
     """
     Convert a GenBank file to SQLite database.
 
     Args:
         gbk_path (str): Path to the GenBank file to convert
+        batch_size (int): Number of records to insert in each batch (default: 2500)
     """
     genome = Genome.create(gbk_path=gbk_path)
     record_objs = []
-    feature_dicts = []
-    qualifier_dicts = []
+    feature_tuples = []
+    qualifier_tuples = []
+    feature_columns = ('genome_id', 'record_id', 'feature_index', 'location_start', 'location_end', 'location_strand')
+    qualifier_columns = ('genome_id', 'record_id', 'feature_index', 'key', 'value')
 
     for record in iter_gb_records(gbk_path):
         record_obj = Record.create(
@@ -63,48 +66,55 @@ def convert_gbk_to_sqlite(gbk_path: str) -> None:
                 location_end = feature.location.end
                 location_strand = str(feature.location.strand) if feature.location.strand is not None else None
 
-            feature_dicts.append(
-                dict(
-                    genome_id=genome.id,
-                    record_id=record_obj.id,
-                    feature_index=idx,
-                    location_start=location_start,
-                    location_end=location_end,
-                    location_strand=location_strand,
-                )
-            )
+            feature_tuples.append((
+                genome.id,
+                record_obj.id,
+                idx,
+                location_start,
+                location_end,
+                location_strand,
+            ))
+
+            # Process feature batch if we've reached batch_size
+            if len(feature_tuples) >= batch_size:
+                _bulk_insert_tuples(feature_tuples, "feature", feature_columns)
+                feature_tuples = []
             for q in feature.qualifiers:
-                qualifier_dicts.append(
-                    dict(
-                        genome_id=genome.id,
-                        record_id=record_obj.id,
-                        feature_index=idx,
-                        key=q.key,
-                        value=q.value,
-                    )
-                )
+                qualifier_tuples.append((
+                    genome.id,
+                    record_obj.id,
+                    idx,
+                    q.key,
+                    q.value,
+                ))
 
-    # Bulk insert features and qualifiers using raw SQL for improved performance
-    if feature_dicts:
-        _bulk_insert(feature_dicts, "feature")
+                # Process qualifier batch if we've reached batch_size
+                if len(qualifier_tuples) >= batch_size:
+                    _bulk_insert_tuples(qualifier_tuples, "qualifier", qualifier_columns)
+                    qualifier_tuples = []
 
-    if qualifier_dicts:
-        _bulk_insert(qualifier_dicts, "qualifier")
+    # Insert any remaining features and qualifiers
+    if feature_tuples:
+        _bulk_insert_tuples(feature_tuples, "feature", feature_columns)
+
+    if qualifier_tuples:
+        _bulk_insert_tuples(qualifier_tuples, "qualifier", qualifier_columns)
 
 
-def _bulk_insert(dicts: List[Dict[str, Any]], table_name: str) -> None:
+def _bulk_insert_tuples(values: List[tuple], table_name: str, columns: tuple) -> None:
     """
-    Helper function for bulk insertion using raw SQL.
+    Helper function for bulk insertion using raw SQL with tuples.
 
     Args:
-        dicts: List of dictionaries containing data to insert
+        values: List of tuples containing data to insert
         table_name: Name of the table to insert into
+        columns: Tuple of column names matching the value tuples
     """
-    keys = dicts[0].keys()
-    columns = ', '.join(keys)
-    placeholders = ', '.join(['?'] * len(keys))
-    sql = f'INSERT INTO {table_name} ({columns}) VALUES ({placeholders})'
-    values = [tuple(d[k] for k in keys) for d in dicts]
+    if not values:
+        return
+
+    placeholders = ', '.join(['?'] * len(columns))
+    sql = f'INSERT INTO {table_name} ({", ".join(columns)}) VALUES ({placeholders})'
     conn = db.connection()
     cursor = conn.cursor()
     cursor.executemany(sql, values)

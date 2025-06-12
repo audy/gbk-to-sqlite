@@ -21,7 +21,7 @@ def main() -> None:
     parser.add_argument("--genbank-files", nargs="+", help="Input GenBank file(s)")
     parser.add_argument('--genbank-glob', type=str, help='glob-string of genbank files')
     parser.add_argument("--sqlite-db", help="Output SQLite database file")
-    parser.add_argument("--batch-size", type=int, default=5000, help="Batch size for bulk inserts (default: 5000)")
+    parser.add_argument("--batch-size", type=int, default=2500, help="Batch size for bulk inserts (default: 2500)")
     args = parser.parse_args()
 
     if args.genbank_files:
@@ -41,16 +41,16 @@ def main() -> None:
     # Initialize Peewee DB and create tables
     db.init(args.sqlite_db)
     db.connect()
-    
+
     # Apply optimizations for bulk import performance
     optimize_database()
-    
+
     # Create tables if they don't exist
     db.create_tables([Genome, Record, Feature, Qualifier])
 
     with db.atomic():
         for gbk_path in tqdm(genbank_files, desc="Loading"):
-            convert_gbk_to_sqlite(gbk_path)
+            convert_gbk_to_sqlite(gbk_path, batch_size=args.batch_size)
 
     # Create indexes after all bulk inserts for optimal performance
     create_indexes()
