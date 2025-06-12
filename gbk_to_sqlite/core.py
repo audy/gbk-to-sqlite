@@ -8,6 +8,7 @@ This module contains the main functions for converting GenBank files to SQLite d
 import gzip
 import warnings
 from typing import List, Dict, Any, Generator, Union, Optional, TextIO
+import logging
 import gb_io
 
 from .models import db, Genome, Record, Feature, Qualifier
@@ -30,14 +31,15 @@ def iter_gb_records(gbk_path: str) -> Generator:
         yield from gb_io.iter(gbk_path)
 
 
-def convert_gbk_to_sqlite(gbk_path: str, batch_size: int = 2500) -> None:
+def convert_gbk_to_sqlite(gbk_path: str, batch_size: int = 5000) -> None:
     """
     Convert a GenBank file to SQLite database.
 
     Args:
         gbk_path (str): Path to the GenBank file to convert
-        batch_size (int): Number of records to insert in each batch (default: 2500)
+        batch_size (int): Number of records to insert in each batch
     """
+    logging.info(f"Converting {gbk_path} to SQLite database using batch size {batch_size}")
     genome = Genome.create(gbk_path=gbk_path)
     record_objs = []
     feature_tuples = []

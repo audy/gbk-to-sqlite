@@ -21,7 +21,7 @@ def main() -> None:
     parser.add_argument("--genbank-files", nargs="+", help="Input GenBank file(s)")
     parser.add_argument('--genbank-glob', type=str, help='glob-string of genbank files')
     parser.add_argument("--sqlite-db", help="Output SQLite database file")
-    parser.add_argument("--batch-size", type=int, default=2500, help="Batch size for bulk inserts (default: 2500)")
+    parser.add_argument("--batch-size", type=int, default=5000, help="Batch size for bulk inserts")
     args = parser.parse_args()
 
     if args.genbank_files:
