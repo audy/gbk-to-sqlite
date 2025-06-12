@@ -6,7 +6,6 @@ from peewee import (
     IntegerField,
     ForeignKeyField,
     TextField,
-    DoesNotExist,
     CompositeKey,
 )
 

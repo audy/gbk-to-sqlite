@@ -7,11 +7,11 @@ This module contains the main functions for converting GenBank files to SQLite d
 
 import gzip
 import warnings
-from typing import List, Dict, Any, Generator, Union, Optional, TextIO
+from typing import List, Generator
 import logging
 import gb_io
 
-from .models import db, Genome, Record, Feature, Qualifier
+from .models import db, Genome, Record
 
 
 def iter_gb_records(gbk_path: str) -> Generator:
