@@ -1,6 +1,7 @@
 # gbk-to-sqlite
 
 [![Tests](https://github.com/audy/gbk-to-sqlite/actions/workflows/test.yml/badge.svg)](https://github.com/audy/gbk-to-sqlite/actions/workflows/test.yml)
+[![PyPI version](https://badge.fury.io/py/gbk-to-sqlite.svg)](https://badge.fury.io/py/gbk-to-sqlite)
 
 Convert GenBank files to SQLite databases with an intuitive, queryable schema.
 
